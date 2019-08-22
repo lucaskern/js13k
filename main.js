@@ -1,6 +1,41 @@
 let { init, Sprite, GameLoop } = kontra
 
-let { canvas } = init();
+let { canvas } = init()
+
+
+//Game Settings
+let rotateSpeed = 40
+let EnemySpeed = 10
+let PUDuration = 10
+
+//Match Settings
+let score,time
+let powerups = []
+
+//soldiers array
+let soliders=[]
+
+let soldier = {
+  health: true,
+  pos: 0,
+  type: 0,
+  attack: function() {
+
+  }
+}
+
+/*
+* Game Start
+* Init match settings
+*/
+function gameStart() {
+ score = 0
+ time = 0
+
+ setInterval(timer, 1000);
+
+ loop.start();    // start the game
+}
 
 
 let sprite = Sprite({
@@ -14,17 +49,31 @@ let sprite = Sprite({
 
 let loop = GameLoop({  // create the main game loop
   update: function() { // update the game state
-    sprite.update();
+    sprite.update()
 
     // wrap the sprites position when it reaches
     // the edge of the screen
     if (sprite.x > canvas.width) {
-      sprite.x = -sprite.width;
+      sprite.x = -sprite.width
     }
   },
   render: function() { // render the game state
-    sprite.render();
+    sprite.render()
   }
 });
 
-loop.start();    // start the game
+//simple count up timer
+function timer() {
+  console.log("rand");
+  ++time
+}
+
+/* Rotate the formation left or right
+*  Based on direction param
+*  Run through soldier array and apply transform for each element
+*/
+function rotate(direction) {
+
+}
+
+gameStart();

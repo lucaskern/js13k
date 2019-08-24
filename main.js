@@ -1,13 +1,17 @@
-let { init, Sprite, GameLoop } = kontra
+let { init, Sprite, GameLoop, getContext, getCanvas, initKeys, keyPressed } = kontra
 
 let { canvas } = init()
 
+initKeys()
 
 //Game Settings
 let rotateSpeed = 40
 let EnemySpeed = 10
 let PUDuration = 10
 let soldierCount = 9
+
+//let canvas = getCanvas()
+let ctx = getContext()
 
 //Match Settings
 let score,time
@@ -23,20 +27,15 @@ function Soldier() {
   this.pos = 0
   this.type = 0
   this.attack = function() {
-
   }
-  //console.log(this)
+
   this.sprite = Sprite({
     x: self.pos * 100,        // starting x,y position of the sprite
-    y: 500,
+    y: 900,
     color: 'blue',  // fill color of the sprite rectangle
-    width: 20,     // width and height of the sprite rectangle
-    height: 20,
-    dx: 2,          // move the sprite 2px to the right every frame
+    width: 40,     // width and height of the sprite rectangle
+    height: 40,
     changes: function() {
-      //console.log(self.pos);
-      this.x = self.pos * 100
-      this.dx = 2
       switch(self.type) {
         case 'swrd':
           this.color = "blue"
@@ -48,6 +47,9 @@ function Soldier() {
           this.color = "green"
           break
       }
+    },
+    init: function() {
+      this.x = (self.pos * 110) + 40
     }
   })
 }
@@ -71,6 +73,7 @@ function gameStart() {
   soldiers[i] = new Soldier()
   soldiers[i].health = 1
   soldiers[i].pos = i
+  soldiers[i].sprite.init()
 
   switch(i) {
     case 0: case 3: case 6:
@@ -95,7 +98,7 @@ let sprite2 = Sprite({
   color: 'red',  // fill color of the sprite rectangle
   width: 20,     // width and height of the sprite rectangle
   height: 40,
-  dx: 2          // move the sprite 2px to the right every frame
+  dx: 1          // move the sprite 2px to the right every frame
 });
 
 let loop = GameLoop({  // create the main game loop
@@ -105,9 +108,12 @@ let loop = GameLoop({  // create the main game loop
       soldiers[i].sprite.update()
       soldiers[i].sprite.changes()
     }
+
+  
     
   },
   render: function() { // render the game state
+    drawUI()
     sprite2.render()
     for (let i = 0; i < soldiers.length; i++) {
       soldiers[i].sprite.render();
@@ -117,8 +123,24 @@ let loop = GameLoop({  // create the main game loop
 
 //simple count up timer
 function timer() {
-  //console.log("rand");
   ++time
+}
+
+function drawUI () {
+  ctx.fillStyle = "black"
+  ctx.fillRect(0,0, canvas.width, 70)
+
+  ctx.fillStyle = "white"
+  //Timer
+  ctx.font = "50px Arial"
+  ctx.fillText(time, 500, 50)
+
+  //score
+  ctx.font = "30px Arial"
+  ctx.fillText(`Score: ${score}`, canvas.width - 150, 50)
+
+  //wave
+  ctx.fillText(`Wave: ${Math.round(time / 20) + 1}`, 30, 50)
 }
 
 /* Rotate the formation left or right

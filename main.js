@@ -20,6 +20,7 @@ let rotateSpeed = 40
 let EnemySpeed = 10
 let PUDuration = 10
 let soldierCount = 9
+let pressed = 0;
 
 //let canvas = getCanvas()
 let ctx = getContext()
@@ -39,7 +40,6 @@ function Soldier() {
   this.type = 0
   this.coolDown = 0
   this.attack = function () {
-    console.log(this.pos + " attack")
     this.sprite.color = "gold";
     setTimeout(this.sprite.changes, (this.coolDown * 1000))
   }
@@ -51,10 +51,8 @@ function Soldier() {
     width: 40, // width and height of the sprite rectangle
     height: 40,
     changes: function () {
-      console.log(self.pos + " changes")
       switch (self.type) {
         case 'swrd':
-          console.log(this);
           self.sprite.color = "blue"
           break
         case 'jav':
@@ -68,6 +66,10 @@ function Soldier() {
     },
     init: function () {
       this.x = (self.pos * 110) + 40
+    },
+    render: function() {
+      //expand soldier draw here
+      this.draw();
     }
   })
 }
@@ -118,6 +120,8 @@ function gameStart() {
     soldiers[i].sprite.changes();
   }
 
+  console.log(soldiers)
+
   loop.start(); // start the game
 }
 
@@ -140,8 +144,29 @@ let loop = GameLoop({ // create the main game loop
     }
 
     bindKeys(['1','2','3','4','5','6','7','8','9'], function(e) {
-      soldiers[(parseInt(e.key) - 1)].attack()
+      if (!pressed) {
+        soldiers[(parseInt(e.key) - 1)].attack()
+      }
+      pressed = 1
     })
+
+
+    document.addEventListener('keydown', function(event) {
+      
+      if (!pressed) {
+        if (event.key === 'ArrowLeft') {
+          shift('l')
+          pressed = 1
+        } else if (event.key === 'ArrowRight') {
+          shift('r')
+          pressed = 1
+        }
+      }
+  });
+  
+  document.addEventListener('keyup', function(event) {
+    pressed = 0
+  })
   },
   render: function () { // render the game state
     drawUI()
@@ -178,8 +203,26 @@ function drawUI() {
  *  Based on direction param
  *  Run through soldier array and apply transform for each element
  */
-function rotate(direction) {
+function shift(direction) {
+  console.log(soldiers)
 
+  if (direction === 'l') {
+    // let first = soldiers.shift()
+    // soldier[soldiers.length + 1] = first
+    for (let i = 0; i < soldierCount; i++) {
+      soldiers[i].pos = soldiers[i].pos === 0 ? 8 : soldiers[i].pos - 1
+      soldiers[i].sprite.init()
+    }
+  } else {
+    // let last = soldiers.pop()
+    // soldiers.unshift(last)
+    for (let i = 0; i < soldierCount; i++) {
+      soldiers[i].pos = soldiers[i].pos === 8 ? 0 : soldiers[i].pos + 1
+      soldiers[i].sprite.init()
+    }
+  }
+  console.log(soldiers)
+  console.log("--------------")
 }
 
 gameStart();

@@ -20,7 +20,8 @@ let rotateSpeed = 40
 let EnemySpeed = 10
 let PUDuration = 10
 let soldierCount = 9
-let pressed = 0;
+let pressed = 0
+let hp = 0 //reserve units
 
 //let canvas = getCanvas()
 let ctx = getContext()
@@ -40,8 +41,15 @@ function Soldier() {
   this.type = 0
   this.coolDown = 0
   this.attack = function () {
-    this.sprite.color = "gold";
-    setTimeout(this.sprite.changes, (this.coolDown * 1000))
+    this.sprite.color = "gold"
+    setTimeout(this.sprite.changes, (this.coolDown * 2000))
+
+    for (let i = 0; i < enemies.length; i++) {
+      if (enemies[i].pos === this.pos && enemies[i].type === this.type) {
+        enemies.splice(i, 1)
+        score++
+      }
+    }
   }
 
   this.sprite = Sprite({
@@ -52,13 +60,13 @@ function Soldier() {
     height: 40,
     changes: function () {
       switch (self.type) {
-        case 'swrd':
+        case 'sword':
           self.sprite.color = "blue"
           break
         case 'jav':
           self.sprite.color = "red"
           break
-        case 'shld':
+        case 'shield':
           self.sprite.color = "green"
           break
       }
@@ -69,13 +77,54 @@ function Soldier() {
     },
     render: function() {
       //expand soldier draw here
-      this.draw();
+      this.draw()
     }
   })
 }
 
-let enemy = {
+function Enemy() {
+  let self = this
+  this.health = true
+  this.pos = 0
+  this.type = 0
+  this.attack = function () {
+    this.sprite.color = "gold"
+    setTimeout(this.sprite.changes, (this.coolDown * 1000))
+  }
+  this.die = function () {
+    
+  }
+  this.sprite = Sprite({
+    x: self.pos * 100, // starting x,y position of the sprite
+    y: 0,
+    color: 'blue', // fill color of the sprite rectangle
+    width: 40, // width and height of the sprite rectangle
+    height: 40,
+    changes: function () {
+      switch (self.type) {
+        case 'sword':
+          self.sprite.color = "blue"
+          self.sprite.dy = 2
+          break
+        case 'jav':
+          self.sprite.color = "red"
+          self.sprite.dy = 3
+          break
+        case 'shield':
+          self.sprite.color = "green"
+          self.sprite.dy = 1
+          break
+      }
 
+    },
+    init: function () {
+      this.x = (self.pos * 110) + 40
+    },
+    render: function() {
+      //expand enemy draw here
+      this.draw()
+    }
+  })
 }
 
 /*
@@ -87,7 +136,9 @@ function gameStart() {
   time = 0
   hp = 20
 
-  setInterval(timer, 1000);
+  setInterval(timer, 1000)
+
+  setInterval(enemyFactory, 3000)
 
   //Init soldiers array with correct types
   for (let i = 0; i < soldierCount; i++) {
@@ -100,50 +151,41 @@ function gameStart() {
       case 0:
       case 3:
       case 6:
-        soldiers[i].type = 'swrd'
+        soldiers[i].type = 'sword'
         soldiers[i].coolDown = 1
-        break;
+        break
       case 1:
       case 4:
       case 7:
         soldiers[i].type = 'jav'
         soldiers[i].coolDown = 3
-        break;
+        break
       case 2:
       case 5:
       case 8:
-        soldiers[i].type = 'shld'
+        soldiers[i].type = 'shield'
         soldiers[i].coolDown = 2
-        break;
+        break
     }
 
-    soldiers[i].sprite.changes();
+    soldiers[i].sprite.changes()
   }
 
-  console.log(soldiers)
-
-  loop.start(); // start the game
+  loop.start() // start the game
 }
-
-
-let sprite2 = Sprite({
-  x: 100, // starting x,y position of the sprite
-  y: 80,
-  color: 'red', // fill color of the sprite rectangle
-  width: 20, // width and height of the sprite rectangle
-  height: 40,
-  dx: 1 // move the sprite 2px to the right every frame
-});
 
 let loop = GameLoop({ // create the main game loop
   update: function () { // update the game state
-    sprite2.update()
     for (let i = 0; i < soldiers.length; i++) {
       soldiers[i].sprite.update()
       //soldiers[i].sprite.changes()
     }
 
-    bindKeys(['1','2','3','4','5','6','7','8','9'], function(e) {
+    for (let i = 0; i < enemies.length; i++) {
+      enemies[i].sprite.update()
+    }
+
+    bindKeys(['1','2','3','4','5','61','7','8','9'], function(e) {
       if (!pressed) {
         soldiers[(parseInt(e.key) - 1)].attack()
       }
@@ -162,20 +204,25 @@ let loop = GameLoop({ // create the main game loop
           pressed = 1
         }
       }
-  });
+  })
   
   document.addEventListener('keyup', function(event) {
     pressed = 0
   })
   },
   render: function () { // render the game state
-    drawUI()
-    sprite2.render()
     for (let i = 0; i < soldiers.length; i++) {
-      soldiers[i].sprite.render();
+      soldiers[i].sprite.render()
     }
+
+    for (let i = 0; i < enemies.length; i++) {
+      enemies[i].sprite.render()
+    }
+
+    //draw UI on top of other elements
+    drawUI()
   }
-});
+})
 
 //simple count up timer
 function timer() {
@@ -204,9 +251,10 @@ function drawUI() {
  *  Run through soldier array and apply transform for each element
  */
 function shift(direction) {
-  console.log(soldiers)
+  //console.log(soldiers)
 
   if (direction === 'l') {
+    let newSoldiers = []
     // let first = soldiers.shift()
     // soldier[soldiers.length + 1] = first
     for (let i = 0; i < soldierCount; i++) {
@@ -221,8 +269,36 @@ function shift(direction) {
       soldiers[i].sprite.init()
     }
   }
-  console.log(soldiers)
-  console.log("--------------")
+
+  //realign soldiers so that attacks correspond to correct position
+  soldiers.sort((a, b) => (a.pos > b.pos) ? 1 : -1)
 }
 
-gameStart();
+/*Create enemies of random type
+* Bias the position to get an even dist
+* Frequency is based on timer/wave
+*/
+function enemyFactory() {
+  let enemyType = ['sword','jav','shield']
+  let newEnemy = new Enemy()
+  newEnemy.pos = Math.floor(Math.random() * 9)     // returns a random integer from 0 to 100
+  newEnemy.type =  enemyType[Math.floor(Math.random() * 3)] 
+  newEnemy.sprite.changes()
+  newEnemy.sprite.init()
+  enemies.push(newEnemy)
+
+  console.log("enemyFactory ran")
+  console.log(enemies)
+}
+
+/*
+* Kill and replace a unit
+* Start respawn timer
+* Reduce reserve count
+* Create new soldier and place in correct array loc
+*/
+function soldierDeath() {
+
+}
+
+gameStart()

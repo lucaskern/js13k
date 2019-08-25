@@ -92,7 +92,11 @@ function Enemy() {
     setTimeout(this.sprite.changes, (this.coolDown * 1000))
   }
   this.die = function () {
-    
+    for (let i = 0; i < enemies.length; i++) {
+      if (enemies[i].sprite.y >= 850) {
+        enemies.splice(i, 1)
+      }
+    }
   }
   this.sprite = Sprite({
     x: self.pos * 100, // starting x,y position of the sprite
@@ -123,6 +127,7 @@ function Enemy() {
     render: function() {
       //expand enemy draw here
       this.draw()
+      self.die()
     }
   })
 }
@@ -185,7 +190,7 @@ let loop = GameLoop({ // create the main game loop
       enemies[i].sprite.update()
     }
 
-    bindKeys(['1','2','3','4','5','61','7','8','9'], function(e) {
+    bindKeys(['1','2','3','4','5','6','7','8','9'], function(e) {
       if (!pressed) {
         soldiers[(parseInt(e.key) - 1)].attack()
       }
@@ -244,11 +249,14 @@ function drawUI() {
 
   //wave
   ctx.fillText(`Wave: ${Math.round(time / 20) + 1}`, 30, 50)
+
+  ctx.fillStyle = "red"
+  ctx.fillRect(0,850, canvas.width, 2)
 }
 
 /* Rotate the formation left or right
  *  Based on direction param
- *  Run through soldier array and apply transform for each element
+3 *  Run through soldier array and apply transform for each element
  */
 function shift(direction) {
   //console.log(soldiers)

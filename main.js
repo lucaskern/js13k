@@ -40,14 +40,18 @@ function Soldier() {
   this.pos = 0
   this.type = 0
   this.coolDown = 0
+  this.cooled = true
   this.attack = function () {
-    this.sprite.color = "gold"
-    setTimeout(this.sprite.changes, (this.coolDown * 2000))
+    if (this.cooled) {
+      this.sprite.color = "gold"
+      setTimeout(this.sprite.changes, (this.coolDown * 1000))
+      this.cooled = false
 
-    for (let i = 0; i < enemies.length; i++) {
-      if (enemies[i].pos === this.pos && enemies[i].type === this.type) {
-        enemies.splice(i, 1)
-        score++
+      for (let i = 0; i < enemies.length; i++) {
+        if (enemies[i].pos === this.pos && enemies[i].type === this.type) {
+          enemies.splice(i, 1)
+          score++
+        }
       }
     }
   }
@@ -70,6 +74,7 @@ function Soldier() {
           self.sprite.color = "green"
           break
       }
+      self.cooled = true
 
     },
     init: function () {
@@ -174,21 +179,6 @@ function gameStart() {
     }
 
     soldiers[i].sprite.changes()
-  }
-
-  loop.start() // start the game
-}
-
-let loop = GameLoop({ // create the main game loop
-  update: function () { // update the game state
-    for (let i = 0; i < soldiers.length; i++) {
-      soldiers[i].sprite.update()
-      //soldiers[i].sprite.changes()
-    }
-
-    for (let i = 0; i < enemies.length; i++) {
-      enemies[i].sprite.update()
-    }
 
     bindKeys(['1','2','3','4','5','6','7','8','9'], function(e) {
       if (!pressed) {
@@ -209,11 +199,28 @@ let loop = GameLoop({ // create the main game loop
           pressed = 1
         }
       }
-  })
+    })
   
-  document.addEventListener('keyup', function(event) {
-    pressed = 0
-  })
+    document.addEventListener('keyup', function(event) {
+      pressed = 0
+    })
+  }
+
+  loop.start() // start the game
+}
+
+let loop = GameLoop({ // create the main game loop
+  update: function () { // update the game state
+    for (let i = 0; i < soldiers.length; i++) {
+      soldiers[i].sprite.update()
+      //soldiers[i].sprite.changes()
+    }
+
+    for (let i = 0; i < enemies.length; i++) {
+      enemies[i].sprite.update()
+    }
+
+
   },
   render: function () { // render the game state
     for (let i = 0; i < soldiers.length; i++) {
@@ -294,9 +301,6 @@ function enemyFactory() {
   newEnemy.sprite.changes()
   newEnemy.sprite.init()
   enemies.push(newEnemy)
-
-  console.log("enemyFactory ran")
-  console.log(enemies)
 }
 
 /*

@@ -1,3 +1,5 @@
+//TODO walk through death process
+
 let {
   init,
   Sprite,
@@ -20,6 +22,8 @@ let rotateSpeed = 40
 let EnemySpeed = 10
 let PUDuration = 10
 let soldierCount = 9
+let respawnTime = 3
+let reserves = 20
 let pressed = 0
 let hp = 0 //reserve units
 
@@ -42,7 +46,7 @@ function Soldier() {
   this.coolDown = 0
   this.cooled = true
   this.attack = function () {
-    if (this.cooled) {
+    if (this.cooled && this.health) {
       this.sprite.color = "gold"
       setTimeout(this.sprite.changes, (this.coolDown * 1000))
       this.cooled = false
@@ -54,6 +58,14 @@ function Soldier() {
         }
       }
     }
+  }
+  this.kill = function() {
+    console.log("killed at pos " + this.pos)
+    this.health = false
+    this.sprite.changes()
+    reserves--
+
+    //this.setTimeout(respawnTime * 1000, soldierDeath())
   }
 
   this.sprite = Sprite({
@@ -75,14 +87,17 @@ function Soldier() {
           break
       }
       self.cooled = true
-
+      self.health = true
     },
     init: function () {
       this.x = (self.pos * 110) + 40
     },
     render: function() {
       //expand soldier draw here
-      this.draw()
+      if (self.health) {
+        this.draw()
+        console.log(self.health);
+      }
     }
   })
 }
@@ -99,6 +114,11 @@ function Enemy() {
   this.die = function () {
     for (let i = 0; i < enemies.length; i++) {
       if (enemies[i].sprite.y >= 850) {
+        soldiers[enemies[i].pos].kill()
+        setTimeout(function() {
+          soldierReplace(enemies[i].pos);
+      }, 1000)
+        soldiers[enemies[i].pos].health = false
         enemies.splice(i, 1)
       }
     }
@@ -153,7 +173,7 @@ function gameStart() {
   //Init soldiers array with correct types
   for (let i = 0; i < soldierCount; i++) {
     soldiers[i] = new Soldier()
-    soldiers[i].health = 1
+    soldiers[i].health = true
     soldiers[i].pos = i
     soldiers[i].sprite.init()
 
@@ -242,23 +262,31 @@ function timer() {
 }
 
 function drawUI() {
+  //Top ui bg
   ctx.fillStyle = "black"
   ctx.fillRect(0, 0, canvas.width, 70)
-
-  ctx.fillStyle = "white"
+  
   //Timer
+  ctx.fillStyle = "white"
   ctx.font = "50px Arial"
   ctx.fillText(time, 500, 50)
+
+  //numbers
+  ctx.fillText("1      2      3      4      5      6      7      8      9", 40, 935)
 
   //score
   ctx.font = "30px Arial"
   ctx.fillText(`Score: ${score}`, canvas.width - 150, 50)
 
+  ctx.fillText(`Units: ${reserves}`, 200, 50)
+
   //wave
   ctx.fillText(`Wave: ${Math.round(time / 20) + 1}`, 30, 50)
 
+  //death line
   ctx.fillStyle = "red"
   ctx.fillRect(0,850, canvas.width, 2)
+
 }
 
 /* Rotate the formation left or right
@@ -309,8 +337,11 @@ function enemyFactory() {
 * Reduce reserve count
 * Create new soldier and place in correct array loc
 */
-function soldierDeath() {
-
+function soldierReplace(pos) {
+  reserves--
+  console.log(soldiers[pos])
+  soldiers[pos].health = true
+  soldiers[pos].sprite.changes()
 }
 
 gameStart()
